@@ -2,14 +2,15 @@
 
 import { createContext, useContext } from "react";
 
-export type Lang = "ja" | "en" | "zh" | "ko";
+export type Lang = "ja" | "en" | "zh" | "ko" | "ru";
 export const LANGS: { key: Lang; label: string }[] = [
   { key: "ja", label: "日本語" },
   { key: "en", label: "English" },
   { key: "zh", label: "中文" },
   { key: "ko", label: "한국어" },
+  { key: "ru", label: "Русский" },
 ];
-export const isLang = (v: unknown): v is Lang => v === "ja" || v === "en" || v === "zh" || v === "ko";
+export const isLang = (v: unknown): v is Lang => v === "ja" || v === "en" || v === "zh" || v === "ko" || v === "ru";
 
 /* A module-level copy lets non-React helpers (item defaults, prompt text)
  * follow the language without threading it through every call. */
@@ -27,6 +28,7 @@ export const SEED_TEXT: Record<Lang, { favorite: string; share: string; inbox: s
   en: { favorite: "Favorite", share: "Share", inbox: "Inbox", starred: "Starred", archive: "Archive", supporting: "Supporting text", start: "Get started" },
   zh: { favorite: "收藏", share: "分享", inbox: "收件箱", starred: "已加星标", archive: "归档", supporting: "辅助文本", start: "开始" },
   ko: { favorite: "즐겨찾기", share: "공유", inbox: "받은편지함", starred: "별표 표시", archive: "보관함", supporting: "보조 텍스트", start: "시작하기" },
+  ru: { favorite: "Избранное", share: "Поделиться", inbox: "Входящие", starred: "Помеченные", archive: "Архив", supporting: "Поясняющий текст", start: "Начать" },
 };
 
 /** ponytail: matches defaults by text; add provenance if authored copies must be distinguished. */
@@ -64,12 +66,14 @@ export const TEXT_TOKEN_TEXT = {
   ja: { onSurface: "標準（オンサーフェス）", onSurfaceVariant: "控えめ（オンサーフェスバリアント）", primary: "プライマリ", secondary: "セカンダリ", onPrimaryContainer: "オンプライマリコンテナ", onSecondaryContainer: "オンセカンダリコンテナ", onTertiaryContainer: "オンターシャリコンテナ", inverseOnSurface: "反転オンサーフェス" },
   zh: { onSurface: "表面文字", onSurfaceVariant: "表面次要文字", primary: "主色", secondary: "次色", onPrimaryContainer: "主色容器文字", onSecondaryContainer: "次色容器文字", onTertiaryContainer: "第三色容器文字", inverseOnSurface: "反色表面文字" },
   ko: { onSurface: "표면 텍스트", onSurfaceVariant: "표면 보조 텍스트", primary: "주 색상", secondary: "보조 색상", onPrimaryContainer: "주 색상 컨테이너 텍스트", onSecondaryContainer: "보조 색상 컨테이너 텍스트", onTertiaryContainer: "세 번째 색상 컨테이너 텍스트", inverseOnSurface: "반전 표면 텍스트" },
+  ru: { onSurface: "Основной текст", onSurfaceVariant: "Второстепенный текст", primary: "Основной", secondary: "Вторичный", onPrimaryContainer: "Текст на основном контейнере", onSecondaryContainer: "Текст на вторичном контейнере", onTertiaryContainer: "Текст на третьем контейнере", inverseOnSurface: "Инверсный текст" },
 };
 
 export const COLOR_TOKEN_TEXT = {
   ja: { surface: "サーフェス", surfaceContainerLow: "コンテナ（低）", surfaceContainer: "コンテナ", surfaceContainerHigh: "コンテナ（高）", surfaceContainerHighest: "コンテナ（最高）", primaryContainer: "プライマリコンテナ", secondaryContainer: "セカンダリコンテナ", tertiaryContainer: "ターシャリコンテナ", primary: "プライマリ", inverseSurface: "反転サーフェス" },
   zh: { surface: "表面", surfaceContainerLow: "低层容器", surfaceContainer: "容器", surfaceContainerHigh: "高层容器", surfaceContainerHighest: "最高层容器", primaryContainer: "主色容器", secondaryContainer: "次色容器", tertiaryContainer: "第三色容器", primary: "主色", inverseSurface: "反色表面" },
   ko: { surface: "표면", surfaceContainerLow: "낮은 컨테이너", surfaceContainer: "컨테이너", surfaceContainerHigh: "높은 컨테이너", surfaceContainerHighest: "가장 높은 컨테이너", primaryContainer: "주 색상 컨테이너", secondaryContainer: "보조 색상 컨테이너", tertiaryContainer: "세 번째 색상 컨테이너", primary: "주 색상", inverseSurface: "반전 표면" },
+  ru: { surface: "Поверхность", surfaceContainerLow: "Низкий контейнер", surfaceContainer: "Контейнер", surfaceContainerHigh: "Высокий контейнер", surfaceContainerHighest: "Макс. контейнер", primaryContainer: "Основной контейнер", secondaryContainer: "Вторичный контейнер", tertiaryContainer: "Третий контейнер", primary: "Основной", inverseSurface: "Инверсная поверхность" },
 };
 
 /** exported for the parity tests only; read strings through t() */
@@ -496,8 +500,72 @@ export const KO: Record<UIKey, string> = {
   aiErrorRefusal: "모델이 답변을 거부했습니다", aiErrorJson: "모델의 응답을 읽을 수 없습니다", aiErrorLong: "답변이 너무 길어 중간에 잘렸습니다. 화면 수를 줄여 다시 시도하세요", aiErrorModel: "모델 ID를 입력하세요",
   aiErrorInsecure: "기본 URL은 https를 사용하거나 localhost를 가리켜야 합니다", aiErrorNetwork: "연결할 수 없습니다. URL, 네트워크 및 서버의 CORS 설정을 확인하세요",
 };
+export const RU: Record<UIKey, string> = {
+  frameSize: "Размер экрана", phoneFrame: "Телефон", desktopFrame: "Компьютер", columnWidth: "Ширина экрана телефона", cornerLeft: "Левые углы", cornerRight: "Правые углы", cornersEach: "Каждый угол отдельно", cornerTl: "Сверху слева", cornerTr: "Сверху справа", cornerBl: "Снизу слева", cornerBr: "Снизу справа",
+  filled: "Залитый", tonal: "Тональный", elevated: "Приподнятый", outlined: "Контурный", standard: "Стандартный", vibrant: "Яркий",
+  parts: "Компоненты", layers: "Слои", edit: "Правка", prompt: "Промпт", closePanel: "Закрыть панель",
+  search: "Поиск", favorites: "Избранное", addFavorite: "В избранное", removeFavorite: "Удалить из избранного", clear: "Очистить", language: "Язык",
+  select: "Выделение (V)", hand: "Рука (H / Space)", blank: "Пустой холст", phone: "Экраны телефонов", addFrame: "Добавить экран", preview: "Просмотр (P)",
+  zoomIn: "Приблизить (+)", zoomOut: "Отдалить (-)", fit: "Вписать (0)", undo: "Отменить (Ctrl+Z)", redo: "Повторить (Ctrl+Shift+Z)",
+  clearAll: "Очистить всё", clearAllTitle: "Очистить холст?", clearAllBody: "Все экраны и компоненты будут удалены. Отмена (Ctrl+Z) вернёт всё назад.",
+  screen: "Экран", screenName: "Имя экрана", name: "Имя", background: "Фон", defaultColor: "Цвет по умолчанию", export: "Экспорт", project: "Проект",
+  saveProject: "Сохранить проект", openProject: "Открыть проект", replaceProjectTitle: "Открыть этот проект?",
+  replaceProject: "Текущий холст будет заменён. Отмена (Ctrl+Z) вернёт всё назад.",
+  askAi: "Спросить ИИ",
+  askAiHint: "Опишите, что нужно сделать, и нажмите «Создать с ИИ»: модель нарисует дизайн на холсте. Или скопируйте инструкцию для внешнего агента (например, Claude Code), затем откройте ссылку или загрузите JSON через «Открыть проект».",
+  askAiGenerate: "Создать с ИИ", askAiGenerating: "Генерация…",
+  askAiPasted: "Вставьте это в вашего ИИ-агента", askAiTitle: "Запросить дизайн у ИИ", askAiCopyTitle: "Инструкция для ИИ-агента", askAiGenerateTitle: "Использовать настройки из вкладки AI", aiSetup: "Настройки ИИ", aiSetupHint: "Укажите ключ или адрес, чтобы генерировать прямо здесь", aiSetupTitle: "Открыть вкладку AI",
+  draftKeep: "Оставить этот вариант", draftUndo: "Вернуться к предыдущему",
+  askAiIdea: "Что создать (например: приложение для заметок)", askAiIdeaFallback: "(опишите идею здесь)", askAiCopy: "Скопировать инструкцию",
+  askAiText: "Создай скетч для M3E Canvas. Сначала изучи {url}: собери дизайн в формате JSON и пришли ссылку. Если запустить код нельзя, пришли JSON в блоке кода. Проверка не требуется.\n\nЧто нужно сделать: {idea}",
+  selectedTab: "Сделать выбранным",
+  selectedHint: "Закрашенная точка обозначает элемент, выбранный на этом экране.",
+  shareLinkCopy: "Скопировать ссылку", shareLinkHint: "Ссылка на этот дизайн (без изображений)",
+  invalidProject: "Не удалось открыть файл проекта.", readOnlyTitle: "Редактируется в другой вкладке",
+  readOnlyBody: "Этот холст открыт для редактирования в другой вкладке. Закройте её и обновите эту страницу.",
+  reload: "Обновить",
+  copied: "Скопировано", saveImage: "Сохранить как картинку", saving: "Сохранение…", previewFrom: "Предпросмотр с этого экрана",
+  duplicate: "Дублировать", duplicateKey: "Дублировать (Ctrl+D)", delete: "Удалить (Delete)", deleteSelection: "Удалить выделенное",
+  text: "Текст", label: "Подпись", bold: "Жирный", action: "Действие", supporting: "Пояснение", tabs: "Вкладки", changeIcon: "Сменить иконку",
+  options: "Опции", addOption: "Добавить опцию", removeOption: "Удалить опцию", addTab: "Добавить вкладку", removeTab: "Удалить вкладку", selectedOption: "Сделать значением по умолчанию", image: "Изображение", pickImage: "Выбрать изображение", removeImage: "Удалить изображение", imageUrl: "URL изображения", imageTop: "Сверху", imageLeading: "Слева", imageTrailing: "Справа", cardLayout: "Макет", noImageLayout: "Без изображения", textPosition: "Положение текста", textTop: "Сверху", textMiddle: "По центру", textBottom: "Снизу", textColor: "Цвет текста", autoColor: "Авто", autoWidth: "По ширине текста", icon: "Иконка", noIcon: "Без иконки", searchIcons: "Поиск иконок",
+  style: "Стиль", state: "Состояние", selected: "Выбрано", handle: "Ручка (нижний экран)", listSwitch: "Переключатель справа", on: "Вкл", container: "Контейнер", wavy: "Волнистый", determinate: "Точный прогресс",
+  railState: "Режим рейла", railCollapsed: "Свернут", railExpanded: "Развернут",
+  railLegacy: "Стандартный рейл · ширина 80dp", railUpgrade: "Использовать Expressive (96dp)",
+  railStandalone: "Разгруппируйте рейл, чтобы включить модальный режим.",
+  railPresentation: "Режим раскрытия", railStandard: "В макете", railModal: "Модальное окно",
+  expandNavigation: "Развернуть навигацию", collapseNavigation: "Свернуть навигацию",
+  trackThickness: "Толщина дорожки",
+  size: "Размер", width: "Ширина", height: "Высота", fontSize: "Размер шрифта", cornerRadius: "Скругление углов", cornerTop: "Верхние углы", cornerBottom: "Нижние углы",
+  screenWidth: "Ширина экрана", contentWidth: "Поля по 16dp по бокам", halfWidth: "В две колонки (половина)", screenHeight: "Высота экрана", halfHeight: "Половина экрана",
+  tapTo: "Нажатие открывает", none: "Нет", goBack: "Назад", swipeTo: "Свайп открывает", toggle: "Переключатель", toggleHint: "Нажатие переключает вкл/выкл",
+  thumbCheck: "Галочка при включении", behavior: "Поведение", whenPressed: "При нажатии…", whatItDoes: "Что делает компонент…", removeLink: "Удалить связь",
+  group: "Группа", makeGroup: "Сгруппировать", ungroup: "Разгруппировать", selectedParts: "выбрано", groupHint: "Сохраняет наложение и перемещается как единый слой",
+  iconBackground: "Фон иконки", noBackground: "Без фона", normalState: "Обычное", onState: "Включено", onStateHint: "Текст, иконка и стиль во включенном виде",
+  groupEditNote: "Разгруппируйте, чтобы редактировать внутренние компоненты", openPanel: "Открыть панель", colors: "Цвета", templates: "Палитры", customColor: "Свой цвет",
+  seedColor: "Базовый цвет", seedHint: "Один цвет строит всю тему Material 3. Точная настройка меняет отдельные роли.",
+  useThis: "Применить", fineTune: "Настроить", dynamicColor: "Динамический цвет",
+  dynamicOnHint: "Цвета видны только в редакторе, на реальном устройстве берутся из обоев.",
+  dynamicOffHint: "Если включено, телефон берет цвета обоев, а эти остаются запасными.", closeBtn: "Закрыть", screens: "Выбрать экран",
+  noLayers: "На этом экране пока ничего нет", showParts: "Показать вложенные детали", hideParts: "Скрыть детали", lock: "Заблокировать", unlock: "Разблокировать", lockedGroup: "Группа заблокирована. Сначала разблокируйте её на панели слоёв",
+  brief: "О чем это приложение…", appName: "Название приложения", targetPlatform: "Платформа", targetAndroid: "Собрать как нативное Android-приложение",
+  targetWeb: "Собрать как веб-приложение для браузера", copyPrompt: "Скопировать промпт", back: "Назад", close: "Закрыть (Esc)", cancel: "Отмена", ok: "ОК",
+  leading: "Слева", trailing: "Справа", home: "Главная", screenN: "Экран", copySuffix: " копия", mobileNote: "Полные функции доступны в браузере на ПК",
+  addButton: "Добавить кнопку", done: "Готово", theme: "Тема", settings: "Тема и настройки", shape: "Форма", typography: "Шрифт", motion: "Анимации",
+  brightness: "Яркость", light: "Светлая", dark: "Тёмная", contrast: "Контраст", bothModes: "Оба режима", contrastStandard: "Стандарт", contrastMedium: "Средний", contrastHigh: "Высокий",
+  shapeScale: "Скругление углов", shapeSquare: "Квадратные", shapeRounded: "Скругленные", shapeFull: "Полные",
+  shapeHint: "Меняет скругление сразу у всех компонентов. Вручную заданные радиусы останутся без изменений.", fontFamily: "Шрифт", emphasized: "Выразительный стиль",
+  emphasizedHint: "Заголовки и метки используют более плотный стиль M3 Expressive.", motionScheme: "Схема анимаций", motionStandard: "Стандартная", motionExpressive: "Выразительная",
+  motionHint: "Выразительная схема добавляет пружинящую физику при переходах между экранами.", tryIt: "Нажмите для проверки",
+  tidy: "Упорядочить", tidyUndo: "Отменить упорядочивание", tidyDone: "Уже упорядочено", placement: "Расположение контента", placeTop: "Сверху", placeCenter: "По центру", placeBottom: "Снизу", placeSpread: "Равномерно", align: "Выравнивание", alignHintOne: "Выравнивает элемент по границам контента экрана.", alignHintMany: "Выравнивает выбранные компоненты друг относительно друга.", alignLeft: "По левому краю", alignCenterH: "По горизонтали по центру", alignRight: "По правому краю", distributeH: "Распределить по горизонтали", alignTop: "По верхнему краю", alignCenterV: "По вертикали по центру", alignBottom: "По нижнему краю", distributeV: "Распределить по вертикали", description: "Описание", screenDescription: "Назначение экрана",
+  ai: "AI", promptReset: "Сбросить к исходному промпту", aiWriteShort: "Написать через ИИ", aiWrite: "Доверить текст ИИ", aiSettings: "Настройки ИИ",
+  aiProvider: "Провайдер", aiBaseUrl: "Базовый URL", aiModel: "ID модели", aiKey: "API-ключ", aiGetKey: "Получить ключ",
+  aiKeyHint: "Ключ сохраняется только в браузере и отправляется напрямую провайдеру.", aiRestore: "Переключить оригинал / вариант ИИ", aiApplied: "Применено",
+  aiSelectScreen: "Сначала выберите экран", aiNoKey: "Введите ключ на вкладке AI, чтобы начать", aiError: "Ошибка при запросе к ИИ",
+  aiErrorRefusal: "Модель отклонила запрос", aiErrorJson: "Не удалось прочесть ответ модели", aiErrorLong: "Ответ был обрезан. Попробуйте уменьшить число экранов", aiErrorModel: "Укажите ID модели",
+  aiErrorInsecure: "Базовый URL должен начинаться с https или указывать на localhost", aiErrorNetwork: "Не удалось подключиться. Проверьте URL, сеть и настройки CORS сервера",
+};
 
-export const t = (key: UIKey, lang: Lang = current): string => (lang === "ko" ? KO[key] : UI[key][lang]);
+export const t = (key: UIKey, lang: Lang = current): string => (lang === "ko" ? KO[key] : lang === "ru" ? RU[key] : UI[key][lang]);
 
 /* ---- part defaults and nouns ---- */
 
@@ -645,6 +713,41 @@ export const KIND_TEXT: Record<
     radio: { noun: "라디오 버튼", label: "옵션" },
     badge: { noun: "배지", label: "3" },
   },
+  ru: {
+    box: { noun: "контейнер" },
+    button: { noun: "кнопка", label: "Кнопка" },
+    iconButton: { noun: "кнопка-иконка" },
+    fab: { noun: "плавающая кнопка (FAB)" },
+    extendedFab: { noun: "расширенная FAB", label: "Создать" },
+    chip: { noun: "чип", label: "Чип" },
+    topAppBar: { noun: "верхняя панель", label: "Заголовок" },
+    bottomNav: { noun: "нижняя навигация" },
+    navRail: { noun: "боковой рейл навигации" },
+    searchBar: { noun: "строка поиска", label: "Поиск" },
+    card: { noun: "карточка", label: "Заголовок карточки", supporting: "Поясняющий текст карточки." },
+    listItem: { noun: "пункт списка", label: "Пункт списка", supporting: "Пояснение" },
+    dialog: { noun: "диалог", label: "Подтверждение", supporting: "Продолжить действие?" },
+    snackbar: { noun: "снекбар", label: "Сохранено", supporting: "Отмена" },
+    textField: { noun: "текстовое поле", label: "Подпись" },
+    select: { noun: "выпадающий список", label: "Выбрать" },
+    switch: { noun: "переключатель", label: "Уведомления" },
+    checkbox: { noun: "чекбокс", label: "Согласен" },
+    slider: { noun: "ползунок" },
+    text: { noun: "текст", label: "Заголовок" },
+    image: { noun: "изображение" },
+    camera: { noun: "камера" },
+    map: { noun: "карта" },
+    divider: { noun: "разделитель" },
+    loadingIndicator: { noun: "индикатор загрузки" },
+    linearProgress: { noun: "линейный прогресс" },
+    circularProgress: { noun: "круговой прогресс" },
+    splitButton: { noun: "кнопка с меню", label: "Отправить" },
+    fabMenu: { noun: "меню FAB" },
+    toolbar: { noun: "панель инструментов" },
+    tabs: { noun: "вкладки" },
+    radio: { noun: "радиокнопка", label: "Вариант" },
+    badge: { noun: "бейдж", label: "3" },
+  },
 };
 
 /** default labels of a tab row */
@@ -653,6 +756,7 @@ export const TAB_LABELS: Record<Lang, string[]> = {
   en: ["For you", "Following", "Trending", "New", "Saved"],
   zh: ["推荐", "关注", "热门", "最新", "已保存"],
   ko: ["추천", "팔로잉", "인기", "새 항목", "저장됨"],
+  ru: ["Для вас", "Подписки", "В тренде", "Новое", "Сохраненное"],
 };
 
 /** default entries of a FAB menu */
@@ -662,6 +766,7 @@ export const SELECT_OPTIONS: Record<Lang, string[]> = {
   en: ["Option 1", "Option 2", "Option 3"],
   zh: ["选项 1", "选项 2", "选项 3"],
   ko: ["옵션 1", "옵션 2", "옵션 3"],
+  ru: ["Вариант 1", "Вариант 2", "Вариант 3"],
 };
 
 export const FAB_MENU_TABS: Record<Lang, { icon: string; label: string }[]> = {
@@ -693,6 +798,13 @@ export const FAB_MENU_TABS: Record<Lang, { icon: string; label: string }[]> = {
     { icon: "attach_file", label: "파일" },
     { icon: "event", label: "일정" },
   ],
+  ru: [
+    { icon: "edit", label: "Заметка" },
+    { icon: "photo_camera", label: "Фото" },
+    { icon: "mic", label: "Аудио" },
+    { icon: "attach_file", label: "Файл" },
+    { icon: "event", label: "Событие" },
+  ],
 };
 
 export const NAV_TABS: Record<Lang, { icon: string; label: string }[]> = {
@@ -719,6 +831,12 @@ export const NAV_TABS: Record<Lang, { icon: string; label: string }[]> = {
     { icon: "search", label: "검색" },
     { icon: "favorite", label: "저장됨" },
     { icon: "settings", label: "설정" },
+  ],
+  ru: [
+    { icon: "home", label: "Главная" },
+    { icon: "search", label: "Поиск" },
+    { icon: "favorite", label: "Избранное" },
+    { icon: "settings", label: "Настройки" },
   ],
 };
 
@@ -759,6 +877,15 @@ export const TRANSITION_TEXT: Record<Lang, Record<string, string>> = {
     expand: "확대",
     none: "애니메이션 없음",
   },
+  ru: {
+    slide: "сдвиг справа",
+    slideLeft: "сдвиг слева",
+    slideUp: "сдвиг снизу",
+    slideDown: "сдвиг сверху",
+    fade: "затухание",
+    expand: "увеличение",
+    none: "без анимации",
+  },
 };
 
 export const SWIPE_TEXT: Record<Lang, Record<string, string>> = {
@@ -766,4 +893,5 @@ export const SWIPE_TEXT: Record<Lang, Record<string, string>> = {
   en: { left: "swiping left", right: "swiping right", up: "swiping up", down: "swiping down" },
   zh: { left: "向左滑动", right: "向右滑动", up: "向上滑动", down: "向下滑动" },
   ko: { left: "왼쪽으로 스와이프", right: "오른쪽으로 스와이프", up: "위로 스와이프", down: "아래로 스와이프" },
+  ru: { left: "свайп влево", right: "свайп вправо", up: "свайп вверх", down: "свайп вниз" },
 };
