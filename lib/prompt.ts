@@ -39,11 +39,11 @@ const VARIANT_TEXT: Record<Lang, Record<Variant, string>> = {
   en: { filled: "filled", tonal: "tonal", elevated: "elevated", outlined: "outlined", text: "text" },
   zh: { filled: "填充", tonal: "色调", elevated: "浮起", outlined: "描边", text: "文字" },
   ko: { filled: "채움", tonal: "토널", elevated: "돌출", outlined: "윤곽선", text: "텍스트" },
+  ru: { filled: "залитый", tonal: "тональный", elevated: "приподнятый", outlined: "контурный", text: "текстовый" },
 };
 
 const hasText = (s?: string | null) => !!s && s.trim().length > 0;
-/** a card's image area in words: what fills it (a picture or the placeholder with its icon),
- *  where it sits (top, a full-height side column, or the whole background) and its stated size */
+
 function cardImage(it: Item, lang: Lang): string {
   if (it.noImage) return "";
   const url = imageSrc(it);
@@ -73,6 +73,14 @@ function cardImage(it: Item, lang: Lang): string {
     if (pos === "background") return `배경 전체에 ${what}(텍스트 뒤에 스크림), `;
     return `위쪽에 ${what}${sized}, `;
   }
+  if (lang === "ru") {
+    const what = url ? `изображение из ${url}` : it.src ? "указанное изображение" : `изображение-заглушка${it.icon ? ` (иконка ${it.icon})` : ""}`;
+    const sized = size ? ` (${size}dp ${pos === "top" ? "высотой" : "шириной"})` : "";
+    if (pos === "leading") return `с ${what}${sized} слева на всю высоту, `;
+    if (pos === "trailing") return `с ${what}${sized} справа на всю высоту, `;
+    if (pos === "background") return `с ${what} на весь фон под текстом с затемнением, `;
+    return `с ${what}${sized} сверху, `;
+  }
   const what = url ? `an image from ${url}` : it.src ? "the provided image" : `a placeholder image${it.icon ? ` (${it.icon} icon)` : ""}`;
   const sized = size ? ` (${size}dp ${pos === "top" ? "tall" : "wide"})` : "";
   if (pos === "leading") return `with ${what}${sized} filling the leading side, `;
@@ -81,39 +89,34 @@ function cardImage(it: Item, lang: Lang): string {
   return `with ${what}${sized} on top, `;
 }
 
-/** a card's text choices that differ from the automatic ones: where the block sits and its color role */
 function cardText(it: Item, lang: Lang): string {
   const parts: string[] = [];
   const align = it.contentAlign;
   const auto = !it.noImage && cardImagePosOf(it) === "background" ? "end" : "start";
   if (align && align !== auto) {
-    const pos = lang === "ja" ? { start: "上", center: "中央", end: "下" } : lang === "zh" ? { start: "顶部", center: "垂直居中", end: "底部" } : lang === "ko" ? { start: "위", center: "가운데", end: "아래" } : { start: "top", center: "middle", end: "bottom" };
-    parts.push(lang === "ja" ? `文字は${pos[align]}寄せ` : lang === "zh" ? `文字${pos[align]}对齐` : lang === "ko" ? `텍스트 ${pos[align]} 정렬` : `text aligned to the ${pos[align]}`);
+    const pos = lang === "ja" ? { start: "上", center: "中央", end: "下" } : lang === "zh" ? { start: "顶部", center: "垂直居中", end: "底部" } : lang === "ko" ? { start: "위", center: "가운데", end: "아래" } : lang === "ru" ? { start: "сверху", center: "по центру", end: "снизу" } : { start: "top", center: "middle", end: "bottom" };
+    parts.push(lang === "ja" ? `文字は${pos[align]}寄せ` : lang === "zh" ? `文字${pos[align]}对齐` : lang === "ko" ? `텍스트 ${pos[align]} 정렬` : lang === "ru" ? `текст выровнен ${pos[align]}` : `text aligned to the ${pos[align]}`);
   }
-  if (it.textColor) parts.push(lang === "ja" ? `文字色 ${it.textColor}` : lang === "zh" ? `文字颜色 ${it.textColor}` : lang === "ko" ? `텍스트 색상 ${it.textColor}` : `text in ${it.textColor}`);
+  if (it.textColor) parts.push(lang === "ja" ? `文字色 ${it.textColor}` : lang === "zh" ? `文字颜色 ${it.textColor}` : lang === "ko" ? `텍스트 색상 ${it.textColor}` : lang === "ru" ? `цвет текста ${it.textColor}` : `text in ${it.textColor}`);
   if (!parts.length) return "";
-  return lang === "en" ? ` (${parts.join(", ")})` : lang === "ko" ? ` (${parts.join(", ")})` : `（${parts.join("、")}）`;
+  return lang === "en" ? ` (${parts.join(", ")})` : lang === "ko" ? ` (${parts.join(", ")})` : ` (${parts.join(", ")})`;
 }
 
-/** a card's background and corners when the author changed them, as one parenthetical */
 function cardLook(it: Item, lang: Lang): string {
   const parts: string[] = [];
-  if (it.fill) parts.push(lang === "ja" ? `背景 ${it.fill}` : lang === "zh" ? `背景 ${it.fill}` : lang === "ko" ? `배경 ${it.fill}` : `on ${it.fill}`);
+  if (it.fill) parts.push(lang === "ja" ? `背景 ${it.fill}` : lang === "zh" ? `背景 ${it.fill}` : lang === "ko" ? `배경 ${it.fill}` : lang === "ru" ? `фон ${it.fill}` : `on ${it.fill}`);
   if (it.corners) parts.push(boxCorners(it, lang));
-  else if (it.radiusTop !== undefined) parts.push(lang === "ja" ? `角丸 ${it.radiusTop}dp` : lang === "zh" ? `圆角 ${it.radiusTop}dp` : lang === "ko" ? `모서리 ${it.radiusTop}dp` : `${it.radiusTop}dp corners`);
+  else if (it.radiusTop !== undefined) parts.push(lang === "ja" ? `角丸 ${it.radiusTop}dp` : lang === "zh" ? `圆角 ${it.radiusTop}dp` : lang === "ko" ? `모서리 ${it.radiusTop}dp` : lang === "ru" ? `скругление ${it.radiusTop}dp` : `${it.radiusTop}dp corners`);
   if (!parts.length) return "";
-  return lang === "en" ? ` ${parts.join(", ")}` : lang === "ko" ? `(${parts.join(", ")})` : `（${parts.join("、")}）`;
+  return lang === "en" ? ` ${parts.join(", ")}` : lang === "ko" ? `(${parts.join(", ")})` : ` (${parts.join(", ")})`;
 }
 
-/** an image's web address, when it was given as one rather than picked from a file */
 const imageSrc = (it: Item) => (it.src && /^https?:\/\//.test(it.src) ? it.src : null);
-/** the placeholder's box as "w×h": the author's height, else the kind's aspect ratio */
 const viewSize = (it: Item, ratio: number) => {
   const w = it.size ?? CONTENT_W;
   return `${w}×${it.size2 ?? Math.round(w * ratio)}dp`;
 };
 
-/** which destination of a bar, rail or tab row is selected, in words */
 function selectedText(it: Item, lang: Lang): string {
   const tabs = it.tabs ?? [];
   const i = Math.min(it.selected ?? 0, Math.max(0, tabs.length - 1));
@@ -121,6 +124,7 @@ function selectedText(it: Item, lang: Lang): string {
   if (lang === "ja") return i === 0 || !label ? "最初の項目が選択状態" : `「${label}」が選択状態`;
   if (lang === "zh") return i === 0 || !label ? "第一项为选中状态" : `“${label}”为选中状态`;
   if (lang === "ko") return i === 0 || !label ? "첫 항목 선택됨" : `"${label}" 선택됨`;
+  if (lang === "ru") return i === 0 || !label ? "выбран первый пункт" : `выбран пункт "${label}"`;
   return i === 0 || !label ? "the first one is selected" : `"${label}" is selected`;
 }
 
@@ -130,7 +134,6 @@ const qz = (s: string) => `“${s.trim()}”`;
 const quote = (lang: Lang) => (lang === "ja" ? qj : lang === "zh" ? qz : qe);
 const trimEnd = (s: string) => s.trim().replace(/[。.\s]+$/, "");
 
-/** Rails without either expressive setting preserve their original export. */
 function railStateText(it: Item, lang: Lang): string {
   if (!isWideRail(it)) return "";
   const component = it.railModal ? "ModalWideNavigationRail" : "WideNavigationRail";
@@ -138,10 +141,9 @@ function railStateText(it: Item, lang: Lang): string {
   if (lang === "ja") return `。${component}、${it.railExpanded ? "展開状態" : "折りたたみ状態"}、幅 ${width}dp。${it.railModal ? "モーダル型：展開時はスクリム付きで本文に重ね、レイアウトの占有幅は 96dp のまま" : "非モーダル型：現在の幅だけレイアウトを占有"}。上部のメニューボタンで展開・折りたたみを切り替える`;
   if (lang === "zh") return `。${component}，${it.railExpanded ? "展开状态" : "折叠状态"}，宽 ${width}dp。${it.railModal ? "模态覆盖：展开时带遮罩覆盖内容，布局占位保持 96dp" : "非模态布局：按当前宽度占据布局空间"}。顶部菜单按钮切换展开与折叠`;
   if (lang === "ko") return `. ${component}, ${it.railExpanded ? "펼친 상태" : "접힌 상태"}, 너비 ${width}dp. ${it.railModal ? "모달 오버레이: 펼치면 스크림과 함께 콘텐츠를 덮고 레이아웃 점유 너비는 96dp로 유지" : "비모달 레이아웃: 현재 너비만큼 레이아웃 공간을 차지"}. 상단 메뉴 버튼으로 펼치기와 접기를 전환한다`;
+  if (lang === "ru") return `; ${component}, ${it.railExpanded ? "развернут" : "свернут"}, ширина ${width}dp; ${it.railModal ? "модальный режим: при раскрытии накладывается поверх с затемнением, сохраняя 96dp в макете" : "немодальный режим: занимает текущую ширину в макете"}; переключение кнопкой меню вверху`;
   return `; ${component}, ${it.railExpanded ? "expanded" : "collapsed"}, ${width}dp wide; ${it.railModal ? "modal overlay: when expanded, cover the content with a scrim while keeping the layout footprint at 96dp" : "non-modal layout: reserve the current width in the layout"}; toggle expansion with the top menu button`;
 }
-
-/* ================= single parts ================= */
 
 function itemJa(it: Item): string {
   const q = qj;
@@ -480,7 +482,97 @@ function itemKo(it: Item): string {
   }
 }
 
-/** a box's corners in words: the top / bottom pairs, or each corner when they differ */
+function itemRu(it: Item): string {
+  const q = qe;
+  const v = VARIANT_TEXT.ru[it.variant];
+  const noun = KIND_TEXT.ru[it.kind]?.noun ?? it.kind;
+  switch (it.kind) {
+    case "button":
+      return `${v} кнопка ${hasText(it.label) ? q(it.label) : "без подписи"}${it.icon ? ` с иконкой ${it.icon}` : ""}${it.size ? ` (шириной ${it.size}dp)` : ""}`;
+    case "iconButton":
+      return `${v} кнопка-иконка ${it.icon ?? "пустая"}`;
+    case "fab":
+      return `${it.size && it.size >= 96 ? "большая " : it.size && it.size <= 40 ? "малая " : ""}${v} плавающая кнопка FAB с иконкой ${it.icon ?? "пустая"}`;
+    case "extendedFab":
+      return `${v} расширенная кнопка FAB ${q(it.label)}${it.icon ? ` с иконкой ${it.icon}` : ""}`;
+    case "chip":
+      return `чип ${q(it.label)}${it.checked ? " (выбран)" : ""}${it.icon && !it.checked ? ` с иконкой ${it.icon}` : ""}`;
+    case "topAppBar":
+      return `верхняя панель приложения с заголовком ${q(it.label)}${it.icon ? ` с кнопкой-иконкой ${it.icon} слева` : ""}${it.icon2 ? ` и ${it.icon2} справа` : ""}`;
+    case "bottomNav": {
+      const tabs = (it.tabs ?? []).map((t) => `${q(t.label || "без подписи")} (${t.icon || "без иконки"})`);
+      return `панель навигации с ${tabs.length} пунктами: ${tabs.join(", ")}; ${selectedText(it, "ru")}`;
+    }
+    case "navRail": {
+      const tabs = (it.tabs ?? []).map((t) => `${q(t.label || "без подписи")} (${t.icon || "без иконки"})`);
+      return `навигационный рейл с ${tabs.length} пунктами: ${tabs.join(", ")}; ${selectedText(it, "ru")}${railStateText(it, "ru")}`;
+    }
+    case "searchBar":
+      return `строка поиска с подсказкой ${q(it.label)}${it.icon2 ? ` и иконкой ${it.icon2} справа` : ""}`;
+    case "card": {
+      const style = it.variant === "elevated" ? "приподнятая" : it.variant === "outlined" ? "контурная" : "залитая";
+      return `${style} карточка${it.size2 ? ` (высотой ${it.size2}dp)` : ""}${cardLook(it, "ru")} ${cardImage(it, "ru")}с заголовком ${q(it.label)}${hasText(it.supporting) ? ` и текстом ${q(it.supporting!)}` : ""}${cardText(it, "ru")}`;
+    }
+    case "listItem":
+      return `элемент списка ${q(it.label)}${hasText(it.supporting) ? ` с пояснением ${q(it.supporting!)}` : ""}${it.icon ? `, иконкой ${it.icon} слева` : ""}${it.switch ? `, переключателем справа (по умолчанию ${it.checked ? "вкл" : "выкл"})` : it.icon2 ? `, иконкой ${it.icon2} справа` : ""}${it.fill && it.fill !== "surfaceContainerLow" ? `, на фоне ${it.fill}` : ""}`;
+    case "dialog":
+      return `диалог с заголовком ${q(it.label)}${hasText(it.supporting) ? ` и текстом ${q(it.supporting!)}` : ""}${it.icon ? ` и иконкой ${it.icon}` : ""}, с кнопками Отмена и ОК`;
+    case "snackbar":
+      return `снекбар ${q(it.label)}${hasText(it.supporting) ? ` с действием ${q(it.supporting!)}` : ""}`;
+    case "textField":
+      return `${it.variant === "filled" ? "залитое" : "контурное"} текстовое поле с подписью ${q(it.label)}${it.icon ? ` и иконкой ${it.icon} слева` : ""}${hasText(it.supporting) ? `; пояснение ${q(it.supporting!)}` : ""}`;
+    case "select": {
+      const opts = (it.tabs ?? []).map((t) => q(t.label || "без подписи"));
+      const initial = it.selected !== undefined && it.tabs?.[it.selected] ? `, изначально ${q(it.tabs[it.selected].label)}` : ", изначально не выбрано";
+      return `${it.variant === "filled" ? "залитой" : "контурный"} выпадающий список ${q(it.label)} (варианты: ${opts.join(", ")}${initial})${it.icon ? `, с иконкой ${it.icon} слева` : ""}`;
+    }
+    case "switch":
+      return `переключатель ${q(it.label)} (изначально ${it.checked ? "вкл" : "выкл"})`;
+    case "checkbox":
+      return `чекбокс ${q(it.label)} (изначально ${it.checked ? "отмечен" : "не отмечен"})`;
+    case "slider":
+      return `ползунок (начальное значение ${it.value ?? 40}%)`;
+    case "text":
+      return `${it.bold ? "жирный " : ""}текст ${q(it.label)} размера ${it.size ?? 28}sp`;
+    case "image":
+      return `квадратное изображение ${it.size ?? 200}dp${imageSrc(it) ? ` (${imageSrc(it)})` : " заглушка"}`;
+    case "camera":
+      return `видоискатель камеры ${viewSize(it, 4 / 3)}`;
+    case "map":
+      return `карта ${viewSize(it, 3 / 4)}`;
+    case "divider":
+      return "разделитель";
+    case "box":
+      return `${it.size ?? PHONE_W}×${it.size2 ?? 220}dp ${it.checked ? "нижняя шторка с ручкой вверху" : "контейнер"} (фон ${it.fill ?? "surfaceContainerLow"}, ${boxCorners(it, "ru")})`;
+    case "loadingIndicator":
+      return `индикатор загрузки M3 Expressive${it.contained ? " (в контейнере)" : ""}`;
+    case "linearProgress":
+      return `${it.wavy ? "волнистый " : ""}линейный прогресс (${it.value === undefined ? "неопределенный" : `${it.value}%`})`;
+    case "circularProgress":
+      return `${it.wavy ? "волнистый " : ""}круговой прогресс (${it.value === undefined ? "неопределенный" : `${it.value}%`})`;
+    case "splitButton":
+      return `${v} кнопка с меню ${q(it.label)}${it.icon ? ` с иконкой ${it.icon}` : ""}`;
+    case "fabMenu": {
+      const items = (it.tabs ?? []).map((t) => `${q(t.label || "без подписи")} (${t.icon || "без иконки"})`);
+      return `меню FAB, раскрывающееся из кнопки, с ${items.length} пунктами: ${items.join(", ")}`;
+    }
+    case "toolbar": {
+      const icons = (it.tabs ?? []).map((t) => t.icon || "пустая").join(", ");
+      return `${it.variant === "filled" ? "яркая" : "стандартная"} плавающая панель с кнопками-иконками: ${icons}`;
+    }
+    case "tabs": {
+      const labels = (it.tabs ?? []).map((t) => q(t.label || "без подписи"));
+      return `ряд из ${labels.length} вкладок: ${labels.join(", ")}; ${selectedText(it, "ru")}`;
+    }
+    case "radio":
+      return `радиокнопка ${q(it.label)} (изначально ${it.checked ? "выбрана" : "не выбрана"})`;
+    case "badge":
+      return hasText(it.label) ? `бейдж с текстом ${q(it.label)}` : "бейдж-точка";
+    default:
+      return noun;
+  }
+}
+
 function boxCorners(it: Item, lang: Lang): string {
   const c = it.corners;
   const each = c && !(c.tl === c.tr && c.bl === c.br);
@@ -488,6 +580,7 @@ function boxCorners(it: Item, lang: Lang): string {
     if (lang === "ja") return `角丸は左上 ${c.tl}dp・右上 ${c.tr}dp・左下 ${c.bl}dp・右下 ${c.br}dp`;
     if (lang === "zh") return `圆角左上 ${c.tl}dp、右上 ${c.tr}dp、左下 ${c.bl}dp、右下 ${c.br}dp`;
     if (lang === "ko") return `모서리 왼쪽 위 ${c.tl}dp / 오른쪽 위 ${c.tr}dp / 왼쪽 아래 ${c.bl}dp / 오른쪽 아래 ${c.br}dp`;
+    if (lang === "ru") return `радиус углов: верхний левый ${c.tl}dp / верхний правый ${c.tr}dp / нижний левый ${c.bl}dp / нижний правый ${c.br}dp`;
     return `corner radius ${c.tl}dp top-left / ${c.tr}dp top-right / ${c.bl}dp bottom-left / ${c.br}dp bottom-right`;
   }
   const t = c ? c.tl : (it.radiusTop ?? 28);
@@ -496,17 +589,17 @@ function boxCorners(it: Item, lang: Lang): string {
     if (lang === "ja") return `角丸 ${t}dp`;
     if (lang === "zh") return `圆角 ${t}dp`;
     if (lang === "ko") return `모서리 ${t}dp`;
+    if (lang === "ru") return `скругление углов ${t}dp`;
     return `${t}dp corners`;
   }
   if (lang === "ja") return `角丸は上 ${t}dp・下 ${b}dp`;
   if (lang === "zh") return `圆角上 ${t}dp、下 ${b}dp`;
   if (lang === "ko") return `위쪽 모서리 ${t}dp / 아래쪽 ${b}dp`;
+  if (lang === "ru") return `скругление: сверху ${t}dp / снизу ${b}dp`;
   return `corner radius ${t}dp top / ${b}dp bottom`;
 }
 
-const itemText = (it: Item, lang: Lang) => (lang === "ja" ? itemJa(it) : lang === "zh" ? itemZh(it) : lang === "ko" ? itemKo(it) : itemEn(it));
-
-/* ================= connected runs ================= */
+const itemText = (it: Item, lang: Lang) => (lang === "ja" ? itemJa(it) : lang === "zh" ? itemZh(it) : lang === "ko" ? itemKo(it) : lang === "ru" ? itemRu(it) : itemEn(it));
 
 function groupText(g: Group, lang: Lang): string {
   if (g.items.length === 1) return itemText(g.items[0], lang);
@@ -541,6 +634,15 @@ function groupText(g: Group, lang: Lang): string {
       : g.items.map((it) => `${q(it.label || "레이블 없음")}(${vt[it.variant]})`).join(", ");
     return `${names} 버튼 ${g.items.length}개를 가로로 연결한 버튼 그룹${same ? `(${vt[g.items[0].variant]})` : ""}`;
   }
+  if (lang === "ru") {
+    if (kind === "listItem") return `список из ${g.items.length} элементов, сверху вниз: ${g.items.map(itemRu).join("; ")}`;
+    if (kind === "chip") return `группа чипов: ${g.items.map((it) => q(it.label) + (it.checked ? " (выбран)" : "")).join(", ")}`;
+    if (kind === "iconButton") return `связанная группа кнопок-иконок: ${g.items.map((it) => it.icon ?? "пустая").join(", ")}`;
+    const names = same
+      ? g.items.map((it) => q(it.label || "без подписи")).join(", ")
+      : g.items.map((it) => `${q(it.label || "без подписи")} (${vt[it.variant]})`).join(", ");
+    return `связанная группа из ${g.items.length} кнопок: ${names}`;
+  }
   if (kind === "listItem") return `a list of ${g.items.length} items, top to bottom: ${g.items.map(itemEn).join("; ")}`;
   if (kind === "chip") return `a chip group: ${g.items.map((it) => q(it.label) + (it.checked ? " (selected)" : "")).join(", ")}`;
   if (kind === "iconButton") return `a connected group of icon buttons: ${g.items.map((it) => it.icon ?? "empty").join(", ")}`;
@@ -550,31 +652,29 @@ function groupText(g: Group, lang: Lang): string {
   return `a connected button group of ${g.items.length}${same ? ` ${vt[g.items[0].variant]}` : ""} buttons: ${names}`;
 }
 
-/** short name for a run when it is referred to again (as a container or a neighbour) */
 function groupName(g: Group, lang: Lang): string {
   const it = g.items[0];
   const noun = KIND_TEXT[lang][it.kind]?.noun ?? it.kind;
   const q = quote(lang);
-  if (g.items.length > 1) return lang === "en" ? `the ${noun} group` : lang === "zh" ? `${noun}组` : lang === "ko" ? `${noun} 그룹` : `${noun}のグループ`;
-  if (it.kind === "box") return lang === "en" ? (it.checked ? "the bottom sheet" : "the box") : lang === "zh" ? (it.checked ? "底部面板" : "容器框") : lang === "ko" ? (it.checked ? "하단 시트" : "상자") : it.checked ? "ボトムシート" : "ボックス";
-  if (hasText(it.label) && it.kind !== "text") return lang === "en" ? `the ${q(it.label)} ${noun}` : `${q(it.label)}${lang === "ko" ? " " : ""}${noun}`;
+  if (g.items.length > 1) return lang === "en" ? `the ${noun} group` : lang === "zh" ? `${noun}组` : lang === "ko" ? `${noun} 그룹` : lang === "ru" ? `группа ${noun}` : `${noun}のグループ`;
+  if (it.kind === "box") return lang === "en" ? (it.checked ? "the bottom sheet" : "the box") : lang === "zh" ? (it.checked ? "底部面板" : "容器框") : lang === "ko" ? (it.checked ? "하단 시트" : "상자") : lang === "ru" ? (it.checked ? "нижняя шторка" : "блок") : it.checked ? "ボトムシート" : "ボックス";
+  if (hasText(it.label) && it.kind !== "text") return lang === "en" ? `the ${q(it.label)} ${noun}` : `${q(it.label)}${lang === "ko" || lang === "ru" ? " " : ""}${noun}`;
   return lang === "en" ? `the ${noun}` : noun;
 }
-
-/* ================= behavior notes ================= */
 
 function actionText(a: Action, frames: Frame[], lang: Lang): string | null {
   const q = quote(lang);
   if (a.to === BACK_TARGET) {
-    return lang === "ja" ? "前の画面に戻る（入ったときの遷移を逆再生する）" : lang === "zh" ? "返回上一个屏幕（反向播放进入时的过渡动画）" : lang === "ko" ? "이전 화면으로 돌아간다(진입 전환을 반대로 재생)" : "goes back to the previous screen (playing the entry transition in reverse)";
+    return lang === "ja" ? "前の画面に戻る（入ったときの遷移を逆再生する）" : lang === "zh" ? "返回上一个屏幕（反向播放进入时的过渡动画）" : lang === "ko" ? "이전 화면으로 돌아간다(진입 전환을 반대로 재생)" : lang === "ru" ? "возвращается на предыдущий экран с обратной анимацией" : "goes back to the previous screen (playing the entry transition in reverse)";
   }
   const target = frames.find((f) => f.id === a.to);
   if (!target) return null;
   const tr = TRANSITION_TEXT[lang][a.transition];
-  const name = q(target.name || (lang === "en" ? "screen" : lang === "zh" ? "屏幕" : lang === "ko" ? "화면" : "画面"));
+  const name = q(target.name || (lang === "en" ? "screen" : lang === "zh" ? "屏幕" : lang === "ko" ? "화면" : lang === "ru" ? "экран" : "画面"));
   if (lang === "ja") return `${name}画面へ${a.transition !== "none" ? `${tr}で` : ""}遷移する`;
   if (lang === "zh") return `${a.transition !== "none" ? `以${tr}的方式` : ""}跳转到${name}屏幕`;
   if (lang === "ko") return `${name} 화면으로${a.transition !== "none" ? ` ${tr} 전환하여` : ""} 이동한다`;
+  if (lang === "ru") return `переходит на экран ${name}${a.transition !== "none" ? ` (анимация: ${tr})` : ""}`;
   return `opens the ${name} screen${a.transition !== "none" ? ` with ${tr}` : ""}`;
 }
 
@@ -584,12 +684,13 @@ function slotName(it: Item, slot: string, lang: Lang): string {
     const tab = it.tabs?.[i];
     const q = quote(lang);
     const label = tab?.label ? q(tab.label) : `#${i + 1}`;
-    return lang === "ja" ? `${label}の項目` : lang === "zh" ? `${label}项` : lang === "ko" ? `${label} 항목` : `the ${label} destination`;
+    return lang === "ja" ? `${label}の項目` : lang === "zh" ? `${label}项` : lang === "ko" ? `${label} 항목` : lang === "ru" ? `пункт ${label}` : `the ${label} destination`;
   }
   const icon = slot === "icon2" ? it.icon2 : it.icon;
   if (lang === "ja") return `${slot === "icon2" ? "右" : "左"}の ${icon ?? ""} アイコンボタン`;
   if (lang === "zh") return `${slot === "icon2" ? "右侧" : "左侧"}的 ${icon ?? ""} 图标按钮`;
   if (lang === "ko") return `${slot === "icon2" ? "오른쪽" : "왼쪽"} ${icon ?? ""} 아이콘 버튼`;
+  if (lang === "ru") return `кнопка-иконка ${icon ?? ""} ${slot === "icon2" ? "справа" : "слева"}`;
   return `the ${icon ?? ""} icon button on the ${slot === "icon2" ? "right" : "left"}`;
 }
 
@@ -598,11 +699,11 @@ function notes(g: Group, frames: Frame[], lang: Lang): string[] {
   const q = quote(lang);
   for (const it of g.items) {
     const noun = KIND_TEXT[lang][it.kind]?.noun ?? it.kind;
-    const name = hasText(it.label) && it.kind !== "text" ? (lang === "en" ? `The ${q(it.label)} ${noun}` : `${q(it.label)}${lang === "ko" ? " " : ""}${noun}`) : lang === "en" ? `The ${noun}` : hasText(it.label) ? (lang === "ja" ? `テキスト${q(it.label)}` : lang === "zh" ? `文本${q(it.label)}` : `텍스트 ${q(it.label)}`) : noun;
+    const name = hasText(it.label) && it.kind !== "text" ? (lang === "en" ? `The ${q(it.label)} ${noun}` : `${q(it.label)}${lang === "ko" || lang === "ru" ? " " : ""}${noun}`) : lang === "en" ? `The ${noun}` : hasText(it.label) ? (lang === "ja" ? `テキスト${q(it.label)}` : lang === "zh" ? `文本${q(it.label)}` : `текст ${q(it.label)}`) : noun;
     const parts: string[] = [];
     if (it.action) {
       const a = actionText(it.action, frames, lang);
-      if (a) parts.push(lang === "ja" ? `タップすると${a}` : lang === "zh" ? `点击后${a}` : lang === "ko" ? `탭하면 ${a}` : `${a} when tapped`);
+      if (a) parts.push(lang === "ja" ? `タップすると${a}` : lang === "zh" ? `点击后${a}` : lang === "ko" ? `탭하면 ${a}` : lang === "ru" ? `при нажатии ${a}` : `${a} when tapped`);
     }
     for (const [slot, action] of Object.entries(it.actions ?? {})) {
       if (!action) continue;
@@ -610,11 +711,12 @@ function notes(g: Group, frames: Frame[], lang: Lang): string[] {
       if (!a) continue;
       const s = slotName(it, slot, lang);
       if (lang === "en") out.push(`Tapping ${s} of ${name.replace(/^The /, "the ")} ${a}.`);
+      else if (lang === "ru") out.push(`Нажатие на ${s} у ${name}: ${a}.`);
       else parts.push(lang === "ja" ? `${s}をタップすると${a}` : lang === "zh" ? `点击${s}后${a}` : `${s}을 탭하면 ${a}`);
     }
     if (it.toggle) {
       const vt = VARIANT_TEXT[lang];
-      const icon = it.toggle.icon; // undefined = same as off, null = no icon
+      const icon = it.toggle.icon;
       const variant = it.toggle.variant;
       const changes: string[] = [];
       const label = it.toggle.label !== undefined && it.toggle.label !== it.label ? it.toggle.label : undefined;
@@ -636,6 +738,12 @@ function notes(g: Group, frames: Frame[], lang: Lang): string[] {
         else if (icon === null) changes.push("아이콘이 사라진다");
         if (variant) changes.push(`변경할 스타일: ${vt[variant]}`);
         parts.push(`탭할 때마다 켜짐/꺼짐이 전환되는 토글 버튼으로 만든다${changes.length ? `(켜졌을 때 ${changes.join(", ")})` : ""}`);
+      } else if (lang === "ru") {
+        if (label !== undefined) changes.push(`подпись меняется на ${qe(label)}`);
+        if (icon) changes.push(`иконка меняется на ${icon}`);
+        else if (icon === null) changes.push("иконка скрывается");
+        if (variant) changes.push(`стиль меняется на ${vt[variant]}`);
+        parts.push(`является переключателем (во включенном состоянии: ${changes.join(", ")})`);
       } else {
         if (label !== undefined) changes.push(`the label becomes ${qe(label)}`);
         if (icon) changes.push(`the icon becomes ${icon}`);
@@ -649,6 +757,7 @@ function notes(g: Group, frames: Frame[], lang: Lang): string[] {
     if (lang === "ja") out.push(`${name}は、${parts.join("。また、")}。`);
     else if (lang === "zh") out.push(`${name}：${parts.join("；")}。`);
     else if (lang === "ko") out.push(`${name}: ${parts.join(". 또한 ")}.`);
+    else if (lang === "ru") out.push(`${name}: ${parts.join(". Также ")}.`);
     else out.push(`${name} ${parts.join(". It also ")}.`);
   }
   return out;
@@ -657,7 +766,7 @@ function notes(g: Group, frames: Frame[], lang: Lang): string[] {
 function swipeNotes(f: Frame, frames: Frame[], lang: Lang): string[] {
   const out: string[] = [];
   const q = quote(lang);
-  const screen = lang === "en" ? "screen" : lang === "zh" ? "屏幕" : lang === "ko" ? "화면" : "画面";
+  const screen = lang === "en" ? "screen" : lang === "zh" ? "屏幕" : lang === "ko" ? "화면" : lang === "ru" ? "экран" : "画面";
   for (const d of SWIPE_DIRS) {
     const to = f.swipe?.[d.key];
     if (!to) continue;
@@ -668,12 +777,11 @@ function swipeNotes(f: Frame, frames: Frame[], lang: Lang): string[] {
     if (lang === "ja") out.push(`${name}画面は、${sw}すると指の動きに追従して${a}。`);
     else if (lang === "zh") out.push(`${name}屏幕：${sw}时跟随手指移动并${a}。`);
     else if (lang === "ko") out.push(`${name} 화면은 ${sw}하면 손가락을 따라 움직이며 ${a}.`);
+    else if (lang === "ru") out.push(`Экран ${name}: при действии "${sw}" следует за пальцем и ${a}.`);
     else out.push(`The ${name} screen ${a} when ${sw}; the screen follows the finger while dragging.`);
   }
   return out;
 }
-
-/* ================= layout: rows and layers ================= */
 
 type Rect = { l: number; t: number; r: number; b: number };
 type LNode = { g: Group; bb: Rect; children: LNode[] };
@@ -683,8 +791,6 @@ const contains = (o: Rect, i: Rect, tol = 2) => i.l >= o.l - tol && i.t >= o.t -
 const overlapArea = (a: Rect, b: Rect) =>
   Math.max(0, Math.min(a.r, b.r) - Math.max(a.l, b.l)) * Math.max(0, Math.min(a.b, b.b) - Math.max(a.t, b.t));
 
-/** Groups keep their canvas order (later = drawn on top). A run that sits fully inside an
- *  earlier, larger one is nested in it, so a box with parts on it reads as one container. */
 function layoutTree(groups: Group[], widths: Record<string, number>): LNode[] {
   const nodes: LNode[] = groups.map((g) => ({ g, bb: groupBounds(g, widths), children: [] }));
   const roots: LNode[] = [];
@@ -700,7 +806,6 @@ function layoutTree(groups: Group[], widths: Record<string, number>): LNode[] {
   return roots;
 }
 
-/** Siblings whose vertical extents overlap and that sit side by side form one row. */
 function rowsOf(nodes: LNode[]): LNode[][] {
   const sorted = [...nodes].sort((a, b) => a.bb.t - b.bb.t || a.bb.l - b.bb.l);
   const out: LNode[][] = [];
@@ -723,7 +828,6 @@ function rowsOf(nodes: LNode[]): LNode[][] {
   return out;
 }
 
-/** where a rect sits inside a container, in words */
 function zone(bb: Rect, within: Rect, lang: Lang, phone: boolean): string {
   const w = within.r - within.l;
   const h = within.b - within.t;
@@ -750,12 +854,16 @@ function zone(bb: Rect, within: Rect, lang: Lang, phone: boolean): string {
     const hh = horiz < 0 ? "" : [" 왼쪽 정렬로", "", " 오른쪽 정렬로"][horiz];
     return `${v}${hh}`;
   }
+  if (lang === "ru") {
+    const v = ["В верхней части", "В центральной части", "В нижней части"][vert];
+    const hh = horiz < 0 ? "" : [", по левому краю", ", по центру", ", по правому краю"][horiz];
+    return `${v}${hh}`;
+  }
   const v = ["Near the top", "In the middle", "Near the bottom"][vert];
   const hh = horiz < 0 ? "" : [", aligned left", ", centered", ", aligned right"][horiz];
   return `${v}${hh}`;
 }
 
-/** the row phrase: a single part, or several parts side by side that must stay on one line */
 function rowText(row: LNode[], where: string, lang: Lang, within: Rect): string {
   if (row.length === 1) {
     const d = groupText(row[0].g, lang);
@@ -775,6 +883,10 @@ function rowText(row: LNode[], where: string, lang: Lang, within: Rect): string 
   if (lang === "ko") {
     const stretch = fillsRight ? `, 마지막 항목(${groupName(last.g, "ko")})은 오른쪽 끝까지 남은 너비를 채웁니다` : "";
     return `${where}, 왼쪽부터 한 행에 다음 항목을 배치합니다: ${descs.join(", ")}(같은 줄에 세로 중앙 정렬하고 쌓거나 줄 바꿈하지 않음${stretch}).`;
+  }
+  if (lang === "ru") {
+    const stretch = fillsRight ? `; последний элемент (${groupName(last.g, "ru")}) растягивается на оставшуюся ширину` : "";
+    return `${where}, в один ряд слева направо: ${descs.join(", ")} (в одну строку с выравниванием по вертикали${stretch}).`;
   }
   const stretch = fillsRight ? `; ${groupName(last.g, "en")} stretches to fill the remaining width to the right edge` : "";
   return `${where}, in one row from left to right: ${descs.join(", ")} (keep them on the same line, vertically centered; never stack or wrap them${stretch}).`;
@@ -799,8 +911,8 @@ function describeNodes(lines: string[], nodes: LNode[], within: Rect | null, wid
     };
     let where: string;
     if (within) where = zone(rowRect, box, lang, phone);
-    else where = lang === "ja" ? (i === 0 ? "まず" : "その下に") : lang === "zh" ? (i === 0 ? "首先" : "其下方") : lang === "ko" ? (i === 0 ? "먼저" : "그 아래에") : i === 0 ? "First" : "Below that";
-    /* a part that partly covers an earlier sibling is drawn on top of it */
+    else where = lang === "ja" ? (i === 0 ? "まず" : "その下に") : lang === "zh" ? (i === 0 ? "首先" : "其下方") : lang === "ko" ? (i === 0 ? "먼저" : "그 아래에") : lang === "ru" ? (i === 0 ? "Сначала" : "Ниже") : i === 0 ? "First" : "Below that";
+
     const overlaps: string[] = [];
     if (row.length === 1) {
       for (const other of nodes) {
@@ -811,7 +923,7 @@ function describeNodes(lines: string[], nodes: LNode[], within: Rect | null, wid
     }
     let line = rowText(row, where, lang, box);
     if (overlaps.length) {
-      const o = overlaps.join(lang === "en" ? " and " : lang === "ko" ? ", " : "、");
+      const o = overlaps.join(lang === "en" ? " and " : lang === "ru" ? " и " : ", ");
       line = lang === "ja" ? `${line.replace(/。$/, "")}（${o}の上に一部重ねて前面に描画）。` : lang === "zh" ? `${line.replace(/。$/, "")}（部分覆盖在${o}之上，绘制在前面）。` : lang === "ko" ? `${line.replace(/\.$/, "")}(${o} 위에 일부 겹쳐 앞쪽에 그림).` : `${line.replace(/\.$/, "")} (partly overlapping ${o}, drawn on top).`;
     }
     lines.push(`${pad}- ${line}`);
@@ -819,26 +931,25 @@ function describeNodes(lines: string[], nodes: LNode[], within: Rect | null, wid
       if (!n.children.length) continue;
       const name = groupName(n.g, lang);
       lines.push(
-        `${pad}  - ${lang === "ja" ? `${name}の中には次を重ねて配置します（ボックス側を背景にし、以下はその前面に載せる。位置はボックス内での相対位置）:` : lang === "zh" ? `${name}内部叠放以下内容（以容器为背景，下列组件绘制在其前面，位置为容器内的相对位置）：` : lang === "ko" ? `${name} 안에 다음 항목을 겹쳐 배치합니다(컨테이너를 배경으로 하고 다음 부품은 그 앞에 배치하며, 위치는 컨테이너 내부 기준):` : `Inside ${name}, layered on top of it (the container is the background; positions are relative to it):`}`,
+        `${pad}  - ${lang === "ja" ? `${name}の中には次を重ねて配置します（ボックス側を背景にし、以下はその前面に載せる。位置はボックス内での相対位置）:` : lang === "zh" ? `${name}内部叠放以下内容（以容器为背景，下列组件绘制在其前面，位置为容器内的相对位置）：` : lang === "ko" ? `${name} 안에 다음 항목을 겹쳐 배치합니다(컨테이너를 배경으로 하고 다음 부품은 그 앞에 배치하며, 위치는 컨테이너 내부 기준):` : lang === "ru" ? `Внутри ${name} слоями поверх размещаются следующие элементы:` : `Inside ${name}, layered on top of it (the container is the background; positions are relative to it):`}`,
       );
       describeNodes(lines, n.children, n.bb, widths, lang, depth + 2, false);
     }
   });
 }
 
-const RAIL_LEAD: Record<Lang, string> = { ja: "左端に", en: "Along the left edge: ", zh: "左缘：", ko: "왼쪽 가장자리에 " };
+const RAIL_LEAD: Record<Lang, string> = { ja: "左端に", en: "Along the left edge: ", zh: "左缘：", ko: "왼쪽 가장자리에 ", ru: "Вдоль левого края: " };
 
 const WIDE_RAIL_STYLE: Record<Lang, string> = {
   ja: "M3 Expressive ナビゲーションレール: 折りたたみ時は幅 96dp、アイコンの下にラベル。展開時は幅 220dp、高さ 56dp の項目内でアイコンとラベルを横並びにし、間隔は 8dp。既存のトップアプリバーに合わせ、両モードの開閉状態すべてで背景は surfaceContainer。選択項目は secondaryContainer のピル型インジケータ、アイコンは onSecondaryContainer、ラベルは secondary を優先し、実際の背景（折りたたみ時は surfaceContainer、展開時は secondaryContainer）とのコントラストが 4.5:1 未満なら、それぞれ onSurface / onSecondaryContainer を使う。上部のメニューボタンで開閉する。非モーダル型は本文の横に配置し、モーダル型は展開時にスクリムとともに本文に重ね、背景操作を遮断する。スクリムのタップまたは Escape で閉じる。",
   en: "M3 Expressive navigation rail: 96dp wide when collapsed, with labels below icons. Expanded width is 220dp, with 56dp-high destinations and horizontal icon/label rows separated by 8dp. Match the existing top app bar with a surfaceContainer background in both modes, whether collapsed or expanded. The selected destination uses a secondaryContainer pill, onSecondaryContainer icon, and a label that prefers secondary. If its contrast against the actual background (surfaceContainer when collapsed, secondaryContainer when expanded) is below 4.5:1, use onSurface / onSecondaryContainer respectively. A top menu button toggles expansion. The non-modal variant sits beside the content; the modal variant overlays it with a scrim when expanded and blocks background interaction. Dismiss with a scrim tap or Escape.",
   zh: "M3 Expressive 侧边导航栏：折叠宽 96dp，标签位于图标下方。展开宽 220dp，项目高 56dp，图标与标签横向排列，间距 8dp。沿用现有顶部应用栏配色，两种模式在折叠与展开时均使用 surfaceContainer 背景。选中项用 secondaryContainer 胶囊指示器，图标为 onSecondaryContainer，文字优先使用 secondary；若与实际背景（折叠为 surfaceContainer，展开为 secondaryContainer）的对比度低于 4.5:1，则分别使用 onSurface / onSecondaryContainer。顶部菜单按钮切换展开与折叠。非模态型位于内容旁；模态型展开时带遮罩覆盖内容并阻止背景交互，点击遮罩或按 Escape 关闭。",
   ko: "M3 Expressive 내비게이션 레일: 접으면 너비 96dp, 아이콘 아래에 레이블을 배치한다. 펼치면 너비 220dp, 항목 높이 56dp, 아이콘과 레이블을 8dp 간격으로 가로 배치한다. 기존 상단 앱 바와 맞추어 두 모드의 접힌 상태와 펼친 상태 모두 surfaceContainer 배경을 사용한다. 선택 항목은 secondaryContainer 알약 표시기, onSecondaryContainer 아이콘, 레이블은 secondary를 우선 사용한다. 실제 배경(접힘: surfaceContainer, 펼침: secondaryContainer)과의 대비가 4.5:1 미만이면 각각 onSurface / onSecondaryContainer를 사용한다. 상단 메뉴 버튼으로 펼치기와 접기를 전환한다. 비모달은 콘텐츠 옆에 배치하고 모달은 펼칠 때 스크림과 함께 콘텐츠를 덮어 배경 조작을 차단한다. 스크림을 탭하거나 Escape를 누르면 닫힌다.",
+  ru: "Навигационный рейл M3 Expressive: ширина в свернутом виде 96dp, подписи под иконками. В развернутом виде ширина 220dp, высота элементов 56dp, иконки и подписи расположены горизонтально с интервалом 8dp. Цвет фона surfaceContainer для обоих режимов и состояний, под стиль верхней панели. Выбранный пункт использует капсулу secondaryContainer, иконку onSecondaryContainer и подпись цвета secondary. Если контраст с реальным фоном (surfaceContainer в свернутом, secondaryContainer в развернутом) ниже 4.5:1, используются onSurface и onSecondaryContainer соответственно. Верхняя кнопка меню переключает раскрытие. Немодальный вариант располагается рядом с контентом; модальный при раскрытии накладывается поверх с затемнением (scrim) и блокирует фон. Закрывается по тапу на затемнение или клавишей Escape.",
 };
 
 function describeScreen(lines: string[], groups: Group[], frameRect: Rect | null, widths: Record<string, number>, lang: Lang) {
   if (!groups.length) return;
-  /* a navigation rail runs the full height, so it is written first, on its own; the
-   * rest of the screen is then read beside it in rows as usual */
   const rails = groups.filter((g) => g.items.length === 1 && g.items[0].kind === "navRail");
   for (const g of rails) lines.push(`- ${RAIL_LEAD[lang]}${itemText(g.items[0], lang)}${lang === "ja" || lang === "zh" ? "。" : "."}`);
   const rest = rails.length ? groups.filter((g) => !rails.includes(g)) : groups;
@@ -846,8 +957,6 @@ function describeScreen(lines: string[], groups: Group[], frameRect: Rect | null
   const roots = layoutTree(rest, widths);
   describeNodes(lines, roots, frameRect, widths, lang, 0, true);
 }
-
-/* ---------- color palette ---------- */
 
 function paletteLines(p: Palette): string[] {
   const row = (pairs: [string, string][]) => `- ${pairs.map(([k, v]) => `${k} ${v}`).join(" / ")}`;
@@ -892,10 +1001,6 @@ function paletteLines(p: Palette): string[] {
   ];
 }
 
-/* ---------- per-component style notes ---------- */
-
-/** How each kind should look; only the kinds on the canvas are written out.
- *  `boxSheet` is the box note used when at least one box has its handle on. */
 const STYLE_NOTES: Record<Lang, Partial<Record<Kind | "boxSheet", string>>> = {
   ja: {
     button:
@@ -1077,15 +1182,86 @@ const STYLE_NOTES: Record<Lang, Partial<Record<Kind | "boxSheet", string>>> = {
     radio: "라디오 버튼: 20dp 원형. 선택 시 primary 테두리와 가운데 점, 미선택 시 onSurfaceVariant 테두리. 그룹에서 하나만 선택되며 레이블은 오른쪽 bodyLarge.",
     badge: "배지: 텍스트가 없으면 6dp 점, 있으면 높이 16dp 알약 모양. 배경 error, 텍스트 onError/labelSmall로 아이콘이나 항목 오른쪽 위에 겹쳐 둔다.",
   },
+  ru: {
+    button:
+      "Кнопки: средний размер, высота 56dp, полностью скруглённые (в форме капсулы). Залитые используют primary, тональные — secondaryContainer, контурные имеют рамку 1dp цвета outline. Группа связанных кнопок — это ряд с промежутком 3dp, где только смежные внутренние углы уменьшаются до 8dp, а внешние остаются круглыми (Connected button group из M3 Expressive).",
+    iconButton:
+      "Кнопки-иконки: круглые 48dp в стилях filled / tonal / outlined / standard в соответствии с указанием. Связанный ряд кнопок-иконок реализуется как Connected button group.",
+    fab: "FAB: стандартный 56dp с углами 16dp; большой — 96dp с углами 28dp; малый — 40dp с углами 12dp. Тональный использует primaryContainer, залитый — primary. Парит в 16dp от края экрана с тенью Level 3.",
+    extendedFab: "Расширенный FAB: высота 56dp, скругление углов 16dp, иконка слева и подпись справа.",
+    chip: "Чипы: высота 32dp, углы 8dp. Выбранное состояние заливается цветом secondaryContainer и отображает галочку в начале. Группа чипов — ряд с промежутками 8dp с горизонтальной прокруткой при переполнении.",
+    topAppBar:
+      "Верхняя панель приложения: высота 64dp, фон surface, продолженный под строку состояния (с отступом сверху на величину системного inset). Заголовок стилем titleLarge, по бокам кнопки-иконки 48dp. Допустимо стандартное тонирование в surfaceContainer при прокрутке.",
+    bottomNav:
+      "Панель навигации: высота 80dp на surfaceContainer, продлевается вниз через область жестовой навигации (с нижним отступом на величину системного inset). Активный пункт выделяется капсульным индикатором secondaryContainer (64×32dp), залитой иконкой и подписью labelMedium.",
+    navRail:
+      "Навигационный рейл: ширина 80dp на surfaceContainer во всю высоту левого края экрана. Пункты располагаются сверху вниз; активный отмечен капсульным индикатором secondaryContainer (56×32dp) с залитой иконкой и подписью labelMedium под ней. Контент размещается справа от рейла.",
+    searchBar: "Строка поиска: высота 56dp, полностью скруглённая, на surfaceContainerHigh, с иконкой поиска слева и указанной иконкой справа.",
+    card: "Карточки: углы 20dp. Область изображения располагается согласно описанию: сверху, слева, справа или на весь фон подложкой (с затемнением со стороны текста: тёмное под светлый текст, светлое под тёмный). Изображения сохраняют пропорции и центрируются (center-crop). Залитая карточка использует surfaceContainerHighest, приподнятая — surfaceContainerLow с тенью Level 1, контурная имеет рамку 1dp outlineVariant. Заголовок titleMedium, текст bodyMedium. Внутренние отступы 20dp, между заголовком и текстом 4dp, между картинкой и текстом 12dp.",
+    listItem:
+      "Элементы списка: высота 72dp, иконка слева 24dp (на круге 40dp primaryContainer, если не указано иное), заголовок bodyLarge, поясняющий текст bodyMedium цвета onSurfaceVariant, фон согласно роли (по умолчанию surfaceContainerLow). Связанный список строится с зазором 3dp, внешними углами 28dp и внутренними 8dp (стиль списков M3 Expressive).",
+    dialog: "Диалоговые окна: ширина 312dp, углы 28dp, фон surfaceContainerHigh. Заголовок headlineSmall, текст bodyMedium, текстовые кнопки выровнены по правому нижнему краю.",
+    snackbar: "Снекбар: высота 48dp, углы 8dp, фон inverseSurface с текстом inverseOnSurface; действие — текстовая кнопка inversePrimary. Отображается в 16dp от нижнего края и исчезает через несколько секунд.",
+    textField:
+      "Текстовые поля: высота 56dp. Контурное поле имеет скругление 16dp и рамку outline; залитое располагается на surfaceContainerHighest с подчеркиванием. При фокусе метка поднимается вверх, а рамка становится 2dp primary. Вспомогательный текст выводится снизу стилем bodySmall.",
+    select:
+      "Выпадающий список: выглядит как текстовое поле (высота 56dp, контурное или залитое) со стрелкой arrow_drop_down в конце. Реализуется как exposed dropdown menu: нажатие открывает снизу меню (surfaceContainer, скругление 4dp, элементы 48dp), выбранное значение выводится в поле.",
+    switch: "Переключатели: стандартный размер M3 (дорожка 52×32dp). Включен — primary; выключен — surfaceContainerHighest с рамкой outline. Подпись слева, сам переключатель у правого края.",
+    checkbox: "Чекбоксы: квадрат 18dp со скруглением 2dp, в отмеченном состоянии primary, подпись справа стилем bodyLarge.",
+    slider: "Ползунки: широкая дорожка M3 Expressive (16dp) с вертикальной ручкой (4×44dp). Слева от ручки цвет primary, справа — secondaryContainer. Перетаскивание меняет значение.",
+    text: "Текст: указанный размер в sp; заголовки на onSurface, описания на onSurfaceVariant, межстрочный интервал в 1.3–1.5 раза больше шрифта. Эффект ряби (ripple) при нажатии не используется.",
+    image: "Изображения: углы 20dp; при отсутствии ресурса используется заглушка surfaceContainerHighest. Сохраняют пропорции с центрированием (center-crop).",
+    camera: "Видоискатель камеры: углы 20dp. В этой области отображается поток камеры устройства; пока разрешение не получено — иконка камеры на темной панели inverseSurface.",
+    map: "Карта: углы 20dp. Область для отображения компонента Map SDK; во время загрузки выводится иконка карты на surfaceContainerHighest.",
+    divider: "Разделители: линия 1dp цвета outlineVariant с боковыми отступами 16dp.",
+    box: "Контейнеры: простые блоки с указанным фоном и радиусом скругления. Служат фоном для накладываемых компонентов и не имеют собственного поведения.",
+    boxSheet:
+      "Контейнеры / нижние шторки: блоки с указанным фоном и скруглением. Только элементы с описанной ручкой перетаскивания (drag handle) реализуются как модальные шторки ModalBottomSheet, остальные остаются обычными фоновыми контейнерами.",
+    loadingIndicator:
+      "Индикатор загрузки: морфинг-индикатор M3 Expressive (вращающийся многоугольник, плавно меняющий форму). В закрытом варианте помещается внутрь круга secondaryContainer.",
+    linearProgress: "Линейный прогресс: указанная толщина дорожки (по умолчанию 4dp) с круглыми краями. При указании волны применяется wavy-стиль M3 Expressive. Дорожка secondaryContainer, прогресс primary.",
+    circularProgress: "Круговой прогресс: указанная толщина дорожки (по умолчанию 4dp) с круглыми краями. При указании волны применяется wavy-стиль M3 Expressive.",
+    splitButton:
+      "Кнопка с меню (SplitButton): компонент из M3 Expressive. Левый сегмент отвечает за основное действие, правый со стрелкой открывает меню. Сегменты разделены зазором 2dp, внешние края полностью круглые, внутренние — 8dp. При открытии меню стрелка поворачивается, а сегмент скругляется.",
+    fabMenu:
+      "Меню FAB: FloatingActionButtonMenu из M3 Expressive. В закрытом виде это стандартный FAB; при нажатии пункты последовательно всплывают вверх, а иконка FAB меняется на крестик (close). Каждый пункт высотой 56dp, полностью скруглён, выровнен по правому краю с иконкой и подписью.",
+    toolbar:
+      "Плавающая панель (HorizontalFloatingToolbar): компонент из M3 Expressive. Высота 64dp, полностью скруглённая, парит в 16dp над нижним краем поверх содержимого. Стандартная использует surfaceContainer, яркая — primaryContainer. Кнопки-иконки внутри размером 48dp.",
+    tabs: "Вкладки: основные вкладки M3. Высота 48dp, подписи titleSmall; активная вкладка выделена текстом primary и индикатором толщиной 3dp по ширине текста со скруглённым верхом, снизу линия outlineVariant. Нажатие переключает содержимое.",
+    radio: "Радиокнопки: круг 20dp. В выбранном состоянии — кольцо primary с точкой по центру, в невыбранном — кольцо onSurfaceVariant. В группе можно выбрать только одну. Подпись справа стилем bodyLarge.",
+    badge: "Бейджи: точка 6dp без текста либо капсула высотой 16dp с текстом. Фон error, текст labelSmall цвета onError. Накладывается в верхний правый угол иконки или элемента.",
+  },
 };
 
-/* ---------- theme: shape, type, motion ---------- */
+const STYLE_NOTES_WEB: Record<Lang, Partial<Record<Kind, string>>> = {
+  ko: {
+    topAppBar: "상단 앱 바: 높이 64dp, 배경 surface. 제목은 titleLarge, 양쪽 아이콘 버튼은 48dp를 사용한다. 스크롤 시 surfaceContainer로 색상이 바뀌는 표준 동작을 사용한다.",
+    bottomNav: "내비게이션 바: 높이 80dp, 배경 surfaceContainer. 선택 항목은 secondaryContainer 알약 표시기(64×32dp), 채운 아이콘과 labelMedium 레이블로 표시한다.",
+  },
+  ja: {
+    topAppBar: "トップアプリバー: 高さ 64dp、背景は surface。タイトルは titleLarge、左右のアイコンボタンは 48dp。スクロール時に surfaceContainer へ色が変わる標準の挙動でよい。",
+    bottomNav: "ナビゲーションバー: 高さ 80dp、背景は surfaceContainer。選択中の項目は secondaryContainer のピル型インジケータ（幅 64dp・高さ 32dp）で示し、アイコンは塗りつぶし、ラベルは labelMedium。",
+  },
+  en: {
+    topAppBar: "Top app bar: 64dp tall on surface. Title in titleLarge, 48dp icon buttons on each side. The standard tint to surfaceContainer on scroll is fine.",
+    bottomNav: "Navigation bar: 80dp tall on surfaceContainer. The active destination shows a secondaryContainer pill indicator (64×32dp), a filled icon and a labelMedium label.",
+  },
+  zh: {
+    topAppBar: "顶部应用栏：高 64dp，背景为 surface。标题用 titleLarge，左右图标按钮 48dp。滚动时变为 surfaceContainer 的标准行为即可。",
+    bottomNav: "导航栏：高 80dp，背景为 surfaceContainer。选中项用 secondaryContainer 的胶囊指示器（宽 64dp、高 32dp）表示，图标为填充样式，标签用 labelMedium。",
+  },
+  ru: {
+    topAppBar: "Верхняя панель: высота 64dp, фон surface. Заголовок titleLarge, по бокам кнопки-иконки 48dp. Допустимо стандартное тонирование в surfaceContainer при прокрутке.",
+    bottomNav: "Панель навигации: высота 80dp, фон surfaceContainer. Активный пункт отмечен индикатором-капсулой secondaryContainer (64×32dp), залитой иконкой и подписью labelMedium.",
+  },
+};
 
 const FONT_NOTE: Record<Lang, (name: string) => string> = {
   ja: (n) => `書体は ${n} を使う。`,
   en: (n) => `Use ${n} as the typeface.`,
   zh: (n) => `字体使用 ${n}。`,
   ko: (n) => `사용할 글꼴: ${n}.`,
+  ru: (n) => `В качестве шрифта используется ${n}.`,
 };
 
 const THEME_NOTES: Record<Lang, { shape: Record<Theme["shape"], string>; emphasized: string; plainType: string; motion: Record<Theme["motion"], string> }> = {
@@ -1141,17 +1317,29 @@ const THEME_NOTES: Record<Lang, { shape: Record<Theme["shape"], string>; emphasi
       expressive: "모션은 MotionScheme.expressive()를 사용한다. 화면 전환과 상태 변화에 가볍게 튀는 스프링 효과를 적용한다.",
     },
   },
+  ru: {
+    shape: {
+      square: "Скругления умеренные: уменьшить шкалу скруглений M3 (кнопки и чипы 8–12dp, карточки и изображения 8dp, диалоги около 12dp), без капсульных форм.",
+      rounded: "Скругления по умолчанию M3 Expressive (капсульные кнопки, карточки 20dp, диалоги 28dp).",
+      full: "Максимальные скругления: кнопки, чипы и поля ввода в форме капсулы, карточки и изображения 32dp, диалоги и шторки около 40dp.",
+    },
+    emphasized: "Заголовки, подписи кнопок и вкладки используют выразительную типографику M3 Expressive (более плотные начертания вроде headlineMediumEmphasized).",
+    plainType: "Типографика использует стандартные начертания M3.",
+    motion: {
+      standard: "Схема анимаций MotionScheme.standard(): плавные переходы без отскока.",
+      expressive: "Схема анимаций MotionScheme.expressive(): легкий пружинящий отскок при переходах и смене состояний.",
+    },
+  },
 };
 
 function themeLines(th: Theme, lang: Lang): string[] {
   const n = THEME_NOTES[lang];
   const font = FONTS.find((f) => f.key === th.font);
-  const fontName = font?.key === "system" ? (lang === "ja" ? "端末のシステムフォント" : lang === "zh" ? "设备的系统字体" : lang === "ko" ? "기기의 시스템 글꼴" : "the device's system font") : (font?.label ?? "Roboto");
-  const sp = lang === "en" || lang === "ko" ? " " : "";
+  const fontName = font?.key === "system" ? (lang === "ja" ? "端末のシステムフォント" : lang === "zh" ? "设备的系统字体" : lang === "ko" ? "기기의 시스템 글꼴" : lang === "ru" ? "системный шрифт устройства" : "the device's system font") : (font?.label ?? "Roboto");
+  const sp = lang === "en" || lang === "ko" || lang === "ru" ? " " : "";
   return [`- ${n.shape[th.shape]}`, `- ${FONT_NOTE[lang](fontName)}${sp}${th.emphasized ? n.emphasized : n.plainType}`, `- ${n.motion[th.motion]}`];
 }
 
-/** the closing guidance; the lines that depend on the target are written for the chosen platform */
 const GENERAL: Record<Lang, (string | ((pl: Platform) => string))[]> = {
   ja: [
     "まず画面の目的から「これは何のアプリか」を判断し、そのカテゴリのアプリとして一般に期待される機能（作成・一覧・詳細・編集・削除・検索・設定など、該当するもの）を、スケッチに描かれていなくても一通り実装する。",
@@ -1209,42 +1397,33 @@ const GENERAL: Record<Lang, (string | ((pl: Platform) => string))[]> = {
     "아이콘은 Material Symbols Rounded를 사용한다.",
     (pl: Platform) => `${pl === "web" ? "브라우저" : "에뮬레이터나 실제 기기"} 동작 검증은 필요 없다. 구현 후 ${pl === "web" ? "production build를 실행하고 그 출력" : "서명된 release APK"}을 결과물로 제공한다.`,
   ],
+  ru: [
+    "Определите назначение приложения по экранам и реализуйте базовую функциональность (создание, список, детализация, редактирование, удаление, поиск, настройки), даже если они явно не нарисованы.",
+    (pl: Platform) => `Данные должны быть реальными. Сохраняйте пользовательские данные ${pl === "web" ? "в браузере (IndexedDB и т.д.), чтобы они сохранялись после перезагрузки" : "на устройстве (Room, DataStore и т.д.), чтобы они сохранялись после перезапуска"}. Не используйте моки/заглушки; при отсутствии данных показывайте пустое состояние. Валидируйте ввод, подтверждайте удаление.`,
+    "Дополняйте недостающее поведение логикой из подписей компонентов. Любая кнопка должна выполнять осмысленное действие по ее смыслу.",
+    "Верстка должна сохранять логику и порядок элементов; размеры и отступы можно подгонять по содержимому. Приоритет всегда отдается работоспособности на реальном экране.",
+    (pl: Platform) => `Используйте стандартные библиотеки ${pl === "web" ? "Material Web" : "Jetpack Compose material3 (последней версии с поддержкой Expressive)"}; не рисуйте вручную то, что есть в библиотеке.`,
+    "Цвета всегда должны браться из ролей темы (primary, surfaceContainer и т.д.), без хардкода HEX-значений.",
+    "Отступы экрана 16dp, между элементами 8–16dp, стили типографики из M3 (titleLarge, bodyMedium и т.д.).",
+    "Элементы, описанные как «в один ряд», должны находиться в одном горизонтальном контейнере Row на одной строке без переносов.",
+    "Элементы «внутри контейнера» рисуются поверх него слоями. Порядок наложения соответствует порядку перечисления.",
+    "Все кликабельные элементы должны иметь эффект ripple и отклик на нажатие. Навигация «Назад» должна возвращать экран с обратной анимацией.",
+    "Для иконок используется шрифт Material Symbols Rounded.",
+    (pl: Platform) => `Тестирование вручную ${pl === "web" ? "в браузере" : "на эмуляторе"} не требуется. Итогом работы должна быть ${pl === "web" ? "готовая сборка production build" : "подписанный release APK"}.`,
+  ],
 };
 
-/** notes that differ on the web, where a browser has no status bar or gesture area to inset for */
-const STYLE_NOTES_WEB: Record<Lang, Partial<Record<Kind, string>>> = {
-  ko: {
-    topAppBar: "상단 앱 바: 높이 64dp, 배경 surface. 제목은 titleLarge, 양쪽 아이콘 버튼은 48dp를 사용한다. 스크롤 시 surfaceContainer로 색상이 바뀌는 표준 동작을 사용한다.",
-    bottomNav: "내비게이션 바: 높이 80dp, 배경 surfaceContainer. 선택 항목은 secondaryContainer 알약 표시기(64×32dp), 채운 아이콘과 labelMedium 레이블로 표시한다.",
-  },
-  ja: {
-    topAppBar: "トップアプリバー: 高さ 64dp、背景は surface。タイトルは titleLarge、左右のアイコンボタンは 48dp。スクロール時に surfaceContainer へ色が変わる標準の挙動でよい。",
-    bottomNav: "ナビゲーションバー: 高さ 80dp、背景は surfaceContainer。選択中の項目は secondaryContainer のピル型インジケータ（幅 64dp・高さ 32dp）で示し、アイコンは塗りつぶし、ラベルは labelMedium。",
-  },
-  en: {
-    topAppBar: "Top app bar: 64dp tall on surface. Title in titleLarge, 48dp icon buttons on each side. The standard tint to surfaceContainer on scroll is fine.",
-    bottomNav: "Navigation bar: 80dp tall on surfaceContainer. The active destination shows a secondaryContainer pill indicator (64×32dp), a filled icon and a labelMedium label.",
-  },
-  zh: {
-    topAppBar: "顶部应用栏：高 64dp，背景为 surface。标题用 titleLarge，左右图标按钮 48dp。滚动时变为 surfaceContainer 的标准行为即可。",
-    bottomNav: "导航栏：高 80dp，背景为 surfaceContainer。选中项用 secondaryContainer 的胶囊指示器（宽 64dp、高 32dp）表示，图标为填充样式，标签用 labelMedium。",
-  },
-};
-
-/* ---------- fixed phrases ---------- */
-
-/** what the screens are drawn for: phones only, desktops only, both, or no screens at all */
 type Viewport = "phone" | "desktop" | "mixed" | "free";
 const viewportOf = (frames: Frame[], phone: boolean): Viewport => {
   if (!phone || frames.length === 0) return "free";
   const phones = frames.filter(isPhoneFrame).length;
   return phones === frames.length ? "phone" : phones === 0 ? "desktop" : "mixed";
 };
-/** a screen's size, written only when the document mixes sizes */
+
 const sizeLabel = (f: Frame, vp: Viewport, lang: Lang): string | undefined => {
   if (vp !== "mixed") return undefined;
   const { w, h } = frameSizeOf(f);
-  const kind = isPhoneFrame(f) ? { ja: "スマホ", en: "phone", zh: "手机", ko: "휴대전화" } : { ja: "デスクトップ", en: "desktop", zh: "桌面", ko: "데스크톱" };
+  const kind = isPhoneFrame(f) ? { ja: "スマホ", en: "phone", zh: "手机", ko: "휴대전화", ru: "телефон" } : { ja: "デスクトップ", en: "desktop", zh: "桌面", ko: "데스크톱", ru: "десктоп" };
   return `${kind[lang]} ${w}×${h}`;
 };
 
@@ -1406,6 +1585,49 @@ const PH = {
     styleIntro: "사용된 부품별 지침입니다. 수치는 M3 Expressive 기본값이며 표준 컴포넌트가 제공하는 동작은 그대로 사용하고 내용에 맞게 조정할 수 있습니다.",
     hGeneral: "## 전체 지침",
   },
+  ru: {
+    screen: "экран",
+    intro: (title: string, brief: string) => `Пожалуйста, реализуйте ${title} в дизайне Material 3 Expressive.${brief ? ` ${trimEnd(brief)}.` : ""}`,
+    titleOnly: (name: string) => `экран ${name}`,
+    titleAll: (n: number) => (n > 1 ? "это приложение" : "этот экран"),
+    target: (vp: Viewport, pl: Platform, dark: boolean, both: boolean) =>
+      `${
+        vp === "phone"
+          ? "Целевое устройство: вертикальный экран смартфона (412×892dp)"
+          : vp === "desktop"
+            ? pl === "web"
+              ? "Целевое устройство: окно десктопного браузера (базовое 1280×800)"
+              : "Целевое устройство: горизонтальный планшет (базовое 1280×800dp)"
+            : vp === "mixed"
+              ? `Поддержка как смартфона (412×892), так и ${pl === "web" ? "десктопного браузера" : "планшета"} (1280×800); экраны с одинаковыми именами реализуются адаптивно`
+              : "Свободная компоновка"
+      }, ${both ? "поддержка светлой и тёмной темы с переключением по системной настройке" : `только ${dark ? "тёмная" : "светлая"} тема`}.`,
+    platform: (pl: Platform) => (pl === "web" ? "Платформа реализации: Web (приложение для браузера)." : "Платформа реализации: Android (нативное приложение)."),
+    schemeHead: (dark: boolean) => (dark ? "Тёмная тема:" : "Светлая тема:"),
+    sketch:
+      "Макет ниже представляет собой черновик для передачи концепции, а не финальную спецификацию. Сделайте полноценное рабочее приложение с ожидаемым набором функций.",
+    hColor: "## Цвета",
+    dynamic: (pl: Platform) =>
+      pl === "web"
+        ? "Используйте динамический цвет: если браузер или система предоставляет акцентный цвет, генерируйте тему M3 на его основе, иначе используйте цвета ниже."
+        : "Используйте динамический цвет: на Android 12+ применяйте палитру на основе обоев (dynamicLightColorScheme / dynamicDarkColorScheme), иначе цвета ниже.",
+    colorIntro: (label: string, fallback: boolean, th: Theme) => {
+      const scheme = `Цветовая схема Material 3 (${th.bothModes ? "светлая и тёмная" : th.dark ? "тёмная" : "светлая"}${th.contrast === "high" ? ", высокий контраст" : th.contrast === "medium" ? ", средний контраст" : ""})`;
+      return `${fallback ? "Резервная тема" : "Тема"}: ${label}. Задайте эти цвета для ${scheme} и ссылайтесь на них через системные роли.`;
+    },
+    hTheme: "## Форма, шрифт и анимации",
+    hLayout: "## Структура экранов",
+    empty: "На экране пока нет компонентов.",
+    screens: (names: string[]) => `Всего экранов (${names.length}): ${names.join(", ")}.`,
+    placement: (place: Place) => (place === "center" ? "Контент сгруппирован по центру экрана по вертикали." : place === "bottom" ? "Контент прижат к нижней части экрана над панелью навигации." : "Элементы распределены по всей высоте экрана с равными промежутками."),
+    screenHead: (name: string, bg: string | undefined, has: boolean, size?: string) => `Экран ${name}${size || bg ? ` (${[size, bg ? `фон ${bg}` : ""].filter(Boolean).join(", ")})` : ""}${has ? ", сверху вниз (наложение элементов указано отдельно):" : " пока пуст."}`,
+    loose: "Элементы вне экранов (общие детали или ссылки):",
+    freeform: "Описание экрана сверху вниз:",
+    hBehavior: "## Поведение и переходы",
+    hStyle: "## Стили компонентов",
+    styleIntro: "Рекомендации по используемым компонентам. Значения соответствуют стандартам M3 Expressive.",
+    hGeneral: "## Общие указания",
+  },
 };
 
 export function buildPrompt(doc: Doc, widths: Record<string, number>, onlyFrameId?: string, lang: Lang = getLang()): string {
@@ -1418,8 +1640,7 @@ export function buildPrompt(doc: Doc, widths: Record<string, number>, onlyFrameI
   const only = onlyFrameId ? allFrames.find((f) => f.id === onlyFrameId) : undefined;
   const frames = only ? [only] : allFrames;
   const viewport = viewportOf(frames, phone);
-  /* canvas order is the layer order; rows are worked out per screen. A hand-made
-   * group is written part by part, since it exists only to move things together. */
+
   const groups = doc.groups
     .filter((g) => !only || frameOfGroup(g, allFrames, widths)?.id === only.id)
     .flatMap((g) => explodeGroup(g, widths));
@@ -1521,5 +1742,4 @@ export function buildPrompt(doc: Doc, widths: Record<string, number>, onlyFrameI
   return lines.join("\n");
 }
 
-/** the prompt to hand out: the author's edited text when there is one, otherwise the generated one */
 export const effectivePrompt = (doc: Doc, widths: Record<string, number>, lang: Lang = getLang()): string => (doc.promptEdit !== undefined ? doc.promptEdit : buildPrompt(doc, widths, undefined, lang));
